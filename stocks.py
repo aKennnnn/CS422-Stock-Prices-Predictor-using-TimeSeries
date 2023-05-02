@@ -37,3 +37,17 @@ TWII.set_index('Date',inplace=True)
 ASI.set_index('Date',inplace=True)
 
 
+# Show daily close price in graph
+for i in data['Index'].unique():
+    plt.plot(data[data['Index'] == i]['Close'])
+    plt.title(f'{i} Daily Close Price')
+    plt.show()
+
+# Show daily difference between open and close
+openNclose = data.sort_values(['Index','Date']).set_index('Date')
+openNclose['Open_Close'] = data['Close'].values - data['Open'].values
+print(openNclose)
+plt.title('Stocks Daily Price Difference Between Open and Close')
+plt.plot(openNclose['Open_Close'])
+plt.show()
+
