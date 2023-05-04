@@ -1,6 +1,10 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from keras.layers import LSTM, Dense
+from keras.models import Sequential
+from sklearn.preprocessing import StandardScaler
+from keras.preprocessing.sequence import TimeseriesGenerator
 
 # Read Data
 data = pd.read_csv("indexProcessed.csv",parse_dates=['Date'])
@@ -36,18 +40,67 @@ SSMI.set_index('Date',inplace=True)
 TWII.set_index('Date',inplace=True)
 ASI.set_index('Date',inplace=True)
 
+# LSTM model
+def createModel():
+    model = Sequential()
+    model.add(LSTM(128,return_sequences=True, input_shape=(steps, 1)))
+    model.add(LSTM(64,return_sequences=False))
+    model.add(Dense(32))
+    model.add(Dense(1))
+    
+    model.compile(optimizer='adam', loss='mean_squared_error')
+    return model
 
+'''
 # Show daily close price in graph
 for i in data['Index'].unique():
     plt.plot(data[data['Index'] == i]['Close'])
     plt.title(f'{i} Daily Close Price')
     plt.show()
-
+'''
 # Show daily difference between open and close
 openNclose = data.sort_values(['Index','Date']).set_index('Date')
 openNclose['Open_Close'] = data['Close'].values - data['Open'].values
-print(openNclose)
+
+'''
 plt.title('Stocks Daily Price Difference Between Open and Close')
 plt.plot(openNclose['Open_Close'])
 plt.show()
+'''
+# contral varables
+batchSize = 40      # batch_size
+nEpochs = 1        # number of epochs
+steps = 30      # days
+
+# Train and show graphs.
+for i in openNclose['Index'].unique():
+    fig , axis = plt.subplots(nrows=3 , ncols=1 , figsize=(15,10), constrained_layout = True)
+    # Set plots in full screen mode
+    manager  = plt.get_current_fig_manager()
+    manager .window.state('zoomed')
+    temp = openNclose[openNclose['Index'] == i]     # set index of each stocks
+    length = len(temp[temp.index > '2020-01-01'])   # number of days after 2020
+    trainSet = temp[['Close']][ : -length]
+    testSet = temp[['Close']][-length :]
+    scaler = StandardScaler()
+    train = scaler.fit_transform(trainSet.values)
+    test = scaler.transform(testSet.values)
+    timeSeriesTrain = TimeseriesGenerator(train, train, length=steps)
+    timeSeriesTest = TimeseriesGenerator(test, test, length=steps)
+    model = createModel()
+    history = model.fit(timeSeriesTrain , batch_size=batchSize , epochs=nEpochs)
+    predicts = model.predict(timeSeriesTest)
+    index = temp[temp.index > '2020-01-01'].index    
+    
+    axis[0].plot(openNclose[openNclose['Index'] == i]['Close'])
+    axis[0].set_title(f'{i} Daily Close Price')
+    axis[1].plot(testSet)
+    axis[1].set_title(f'{i} After 2020')
+    axis[2].plot(index , scaler.inverse_transform(test) , label='Real')
+    axis[2].plot(index[steps : ] , scaler.inverse_transform(predicts) , label='Prediction')
+    axis[2].set_title(f'{i} Daily Close Real vs Prediction')
+    axis[2].legend(loc="upper left")
+    #plt.plot(history.history['loss'])
+    #plt.title('Loss')
+    plt.show()
 
