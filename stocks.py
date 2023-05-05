@@ -69,7 +69,7 @@ plt.show()
 '''
 # contral varables
 batchSize = 40      # batch_size
-nEpochs = 1        # number of epochs
+nEpochs = 10        # number of epochs
 steps = 30      # days
 
 # Train and show graphs.
