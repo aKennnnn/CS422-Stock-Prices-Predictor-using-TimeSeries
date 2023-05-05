@@ -73,15 +73,9 @@ plt.plot(openNclose['Open_Close'])
 plt.show()
 '''
 # contral varables
-<<<<<<< HEAD
 batchSize = 40      # batch_size. The number of samples that will be propagated through the network.
 nEpochs = 10        # number of epochs. 
 steps = 30      # Time steps in days. means how many values exist in a sequence. 
-=======
-batchSize = 40      # batch_size
-nEpochs = 10        # number of epochs
-steps = 30      # days
->>>>>>> ddda3608b9e65fec564428bceccd6541e00b69d9
 
 # Train and show graphs.
 for i in openNclose['Index'].unique():
